@@ -4,7 +4,7 @@ import sys
 import time
 
 dirs 		= []
-plugins		= []
+count		= 0
 lock 		= 0
 
 def checkdir(url,file):
@@ -52,8 +52,9 @@ def find_between( s, first, last ,pointer):
     except ValueError:
         return ("",0)
 def update(start,end):
-	global plugins
+	global count
 	global lock
+	pluginq = []
 	plugin 	= ''
 	pointer = 0
 	for i in range(start,end):
@@ -71,10 +72,13 @@ def update(start,end):
 					else:
 						
 						print "[+] "+plugin
-						plugins.append(plugin)
+						pluginq.append(plugin)
 				break
 			except KeyboardInterrupt:
 				sys.exit(0)
+			except urllib2.URLError, e:
+				if(e.code == 404):
+					sys.exit(0)
 			except:
 				break
 	while True:
@@ -87,11 +91,11 @@ def update(start,end):
 			txt 	= file.read()
 			file.close()
 			file 	= open('plugin.txt','a')
-			for i in plugins:
+			for i in pluginq:
 				if(txt.find(i) == -1):
 					file.write(i+'\n')
+					count = count + 1
 			file.close()
-			print "[+] "+str(len(plugins))+" New Plugins add to database"
 			lock = 0
 			break
 def printm():
@@ -106,7 +110,7 @@ def printm():
 	[+] 2) Update Plugin List
 	'''
 def main():
-
+	global count
 	printm()
 	option	= raw_input('>>> Enter Option Number: ')
 	
@@ -126,12 +130,13 @@ def main():
 	elif(str(option) == '2'):
 		threads = []
 		
-		for i in range(4):
-			thread 		= threading.Thread(target=update,args=(i*50,(i+1)*50,))
+		for i in range(10):
+			thread 		= threading.Thread(target=update,args=(i*10,(i+1)*10,))
 			thread.start()
 			threads.append(thread)
 		for i in threads:
 			i.join()
+		print "[+] "+str(count)+" New Plugins add to database"
 		
 
 main()
