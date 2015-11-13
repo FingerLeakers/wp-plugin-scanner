@@ -1,16 +1,11 @@
 import urllib2
 import threading
 import sys
+import time
 
 dirs 		= []
 plugins		= []
-class brouteforce(threading.Thread):
-	def __init__(self,url,file):
-		threading.Thread.__init__(self)
-		self.url 	= url
-		self.file	= file
-	def run(self):
-		checkdir(self.url,self.file)
+lock 		= 0
 
 def checkdir(url,file):
 	global dirs
@@ -56,11 +51,12 @@ def find_between( s, first, last ,pointer):
         return (s[start:end],end)
     except ValueError:
         return ("",0)
-def update():
+def update(start,end):
 	global plugins
+	global lock
 	plugin 	= ''
 	pointer = 0
-	for i in range(1,10):
+	for i in range(start,end):
 		while True:
 			url 	= 'http://wordpress.org/plugins/browse/popular/page/'+str(i)+'/'
 			request	= urllib2.Request(url)
@@ -79,16 +75,24 @@ def update():
 				break
 			except KeyboardInterrupt:
 				sys.exit(0)
-
-	file 	= open('plugin.txt','r')
-	txt 	= file.read()
-	file.close()
-	file 	= open('plugin.txt','a')
-	for i in plugins:
-		if(txt.find(i) == -1):
-			file.write(i+'\n')
-	file.close()
-	print "[+] "+str(len(plugins))+" New Plugins add to database"
+			except:
+				break
+	while True:
+		if(lock == 1):
+			time.sleep(2)
+			pass
+		else:
+			lock = 1
+			file 	= open('plugin.txt','r')
+			txt 	= file.read()
+			file.close()
+			file 	= open('plugin.txt','a')
+			for i in plugins:
+				if(txt.find(i) == -1):
+					file.write(i+'\n')
+			file.close()
+			print "[+] "+str(len(plugins))+" New Plugins add to database"
+			break
 def printm():
 	print '''
 ######################################################################
@@ -108,17 +112,25 @@ def main():
 	if(str(option) == '1'):
 		url 		= raw_input('>>> Enter Site URL: ')
 		threadnum	= raw_input('>>> Enter Thread Number: ')
-		file 	= open('wp\\plugin.txt','r')
+		file 	= open('plugin.txt','r')
 		threads = []
 		
 		for i in range(int(threadnum)):
-			thread 		= brouteforce(url,file)
+			thread 		= threading.Thread(target=checkdir,args=(url,file,))
 			thread.start()
 			threads.append(thread)
 		for i in threads:
 			i.join()
 		file.close()
 	elif(str(option) == '2'):
-		update()
+		threads = []
+		
+		for i in range(4):
+			thread 		= threading.Thread(target=update,args=(i*50,(i+1)*50,))
+			thread.start()
+			threads.append(thread)
+		for i in threads:
+			i.join()
+		
 
 main()
