@@ -92,6 +92,7 @@ def update(start,end):
 					file.write(i+'\n')
 			file.close()
 			print "[+] "+str(len(plugins))+" New Plugins add to database"
+			lock = 0
 			break
 def printm():
 	print '''
