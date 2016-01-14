@@ -1,3 +1,5 @@
+#github  : www.github.com/enddo
+
 import urllib2
 import threading
 import sys
